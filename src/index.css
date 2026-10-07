@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Animatable integer used by the in-stage progress bar and its % label. */
+@property --p {
+  syntax: '<integer>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --ink: #0b1020;
+    --panel: #111827;
+    --line: rgba(148, 163, 184, 0.14);
+    --line-strong: rgba(148, 163, 184, 0.26);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink font-sans text-paper antialiased;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(1200px 600px at 85% -10%, rgba(0, 212, 255, 0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 30%, rgba(255, 193, 7, 0.05), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+    letter-spacing: -0.01em;
+  }
+
+  :focus-visible {
+    outline: 2px solid #ffc107;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background: rgba(0, 212, 255, 0.3);
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-2xl border bg-panel/70 backdrop-blur-md;
+    border-color: var(--line);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 40px -24px rgba(0, 0, 0, 0.6);
+  }
+
+  .panel-title {
+    @apply font-display text-base font-semibold text-paper;
+  }
+
+  .muted {
+    @apply text-slate-400;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .btn-cab {
+    @apply btn bg-cab text-ink hover:bg-[#ffd045];
+  }
+  .btn-pipe {
+    @apply btn bg-pipe/15 text-pipe ring-1 ring-inset ring-pipe/40 hover:bg-pipe/25;
+  }
+  .btn-ghost {
+    @apply btn text-slate-200 ring-1 ring-inset ring-slate-600/60 hover:bg-white/5;
+  }
+  .btn-danger {
+    @apply btn text-red-300 ring-1 ring-inset ring-bad/40 hover:bg-bad/10;
+  }
+
+  .field {
+    @apply w-full rounded-xl border bg-ink/70 px-3 py-2.5 text-sm text-paper placeholder:text-slate-500 transition-colors focus:border-pipe/60 focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-pipe/30;
+    border-color: var(--line-strong);
+  }
+  .field[aria-invalid='true'] {
+    @apply border-bad/70 ring-1 ring-bad/30;
+  }
+
+  /* In-stage progress: --p goes 0 → 100 over one clock cycle. */
+  .cycle-progress {
+    --p: 0;
+  }
+  .cycle-progress.is-running,
+  .cycle-progress.is-paused {
+    animation: cycle-fill var(--cycle-ms, 1000ms) linear forwards;
+  }
+  .cycle-progress.is-paused {
+    animation-play-state: paused;
+  }
+  .cycle-progress.is-full {
+    --p: 100;
+  }
+  .cycle-progress .bar {
+    width: calc(var(--p) * 1%);
+  }
+  .cycle-progress .pct::after {
+    counter-reset: pct var(--p);
+    content: counter(pct) '%';
+  }
+
+  /* Timeline cells appear with a short pop the first time they render. */
+  .cell-pop {
+    animation: cell-pop 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .road-dash {
+    background-image: linear-gradient(90deg, rgba(255, 193, 7, 0.55) 50%, transparent 50%);
+    background-size: 22px 2px;
+    background-repeat: repeat-x;
+  }
+  .road-dash.is-moving {
+    animation: road 0.9s linear infinite;
+  }
+
+  .live-dot {
+    @apply relative inline-flex h-2 w-2 rounded-full;
+  }
+  .live-dot.is-on::after {
+    content: '';
+    @apply absolute inset-0 rounded-full;
+    background: inherit;
+    animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+  }
+}
+
+@keyframes cycle-fill {
+  from { --p: 0; }
+  to { --p: 100; }
+}
+
+@keyframes cell-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes road {
+  from { background-position: 0 0; }
+  to { background-position: 22px 0; }
+}
+
+@keyframes ping {
+  75%, 100% { transform: scale(2.4); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell-pop,
+  .road-dash.is-moving,
+  .live-dot.is-on::after {
+    animation: none !important;
+  }
+}
+
+.reduce-motion .cell-pop,
+.reduce-motion .road-dash.is-moving,
+.reduce-motion .live-dot.is-on::after {
+  animation: none !important;
+}
